@@ -1,0 +1,25 @@
+@import '../../node_modules/vuetify/settings';
+@import '../../node_modules/vuetify/styles';
+@import '../../node_modules/vuetify/tools';
+
+.invisible {
+  visibility: hidden;
+}
+.clickable {
+  cursor: pointer !important;
+}
+.max-4 {
+  max-width: 400px;
+}
+.max-6 {
+  max-width: 600px;
+}
+.max-8 {
+  max-width: 800px;
+}
+.full-height {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

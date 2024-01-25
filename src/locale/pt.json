@@ -1,0 +1,31 @@
+{
+  "global": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "edit_profile": "Editar perfil",
+    "remember_me": "Lembrar-me",
+    "email": "E-mail",
+    "password": "Senha",
+    "forgot_password": "Esqueci minha senha",
+    "confirm_password": "Confirme a senha",
+    "confirm_password_helper": "As duas senhas devem ser iguais",
+    "reset_password": "Nova senha",
+    "add": "Adicionar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "go_back": "Voltar",
+    "items_per_page": "Itens por página",
+    "filter_search": "Filtrar",
+    "show": "Visualizar",
+    "update": "Editar",
+    "remove": "Deletar",
+    "actions": "Ações",
+    "not_assigned": "Não associado",
+    "change_language": "Idioma",
+    "error": "Erro",
+    "field": "Campo",
+    "edit_success": "editado com sucesso!",
+    "create_success": "criado com sucesso!",
+    "greetings": "Olá"
+  }
+}

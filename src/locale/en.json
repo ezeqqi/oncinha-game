@@ -1,0 +1,31 @@
+{
+  "global": {
+    "login": "Login",
+    "logout": "Disconnect",
+    "edit_profile": "Edit profile",
+    "remember_me": "Remember me",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Reset password",
+    "confirm_password": "Confirm password",
+    "confirm_password_helper": "Passwords must match",
+    "reset_password": "New password",
+    "add": "New",
+    "cancel": "Cancel",
+    "save": "Save",
+    "go_back": "Return",
+    "items_per_page": "Items per page",
+    "filter_search": "Filter",
+    "show": "Show",
+    "update": "Edit",
+    "remove": "Delete",
+    "actions": "Actions",
+    "not_assigned": "Not assigned",
+    "change_language": "Language",
+    "error": "Error",
+    "field": "Field",
+    "edit_success": "edited succefully!",
+    "create_success": "created succefully!",
+    "greetings": "Hello"
+  }
+}
