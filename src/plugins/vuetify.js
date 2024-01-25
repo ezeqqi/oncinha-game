@@ -8,8 +8,6 @@
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 import '@/styles/settings.scss'
-import { VDatePicker } from 'vuetify/labs/VDatePicker'
-import { VuetifyDateAdapter } from 'vuetify/labs/date/adapters/vuetify'
 
 // Composables
 import { createVuetify } from 'vuetify'
@@ -34,11 +32,5 @@ export default createVuetify({
         },
       },
     },
-  },
-  components: {
-    VDatePicker,
-  },
-  date: {
-    adapter: VuetifyDateAdapter,
   },
 })
