@@ -11,21 +11,43 @@
     </v-row>
     <v-row class="justify-center">
       <v-col cols="auto" class="max-4">
-        <v-btn size="120" rounded elevation="10" @click.stop="roll">
-          Roll
+        <v-btn size="120" rounded elevation="10" @click.stop="spin">
+          Spin
         </v-btn>
       </v-col>
     </v-row>
   </v-container>
   <v-row class="justify-center">
-    <v-col v-for="(slot, i) of slots" cols="4" class="max-4 text-center" :key="i">
-      <v-icon size="80" :icon="slot?.image || 'mdi-minus'" :color="slot?.color || 'grey-darken-2'" class="mx-auto"/>
+    <v-col cols="9">
+      <v-row class="justify-center border-sm">
+        <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i">
+          <v-icon size="40" :icon="slot?.image || 'mdi-minus'" :color="slot?.color || 'grey-darken-2'" class="mx-auto"/>
+        </v-col>
+      </v-row>
     </v-col>
   </v-row>
+
+  <v-row class="justify-center mt-8">
+    <v-col cols="9">
+      <v-row class="border-sm">
+        <v-col cols="4" class="text-center border-sm">
+          {{ pocket }}
+        </v-col>     
+        <v-col cols="4" class="text-center border-sm">
+
+          {{ currentBet }}
+        </v-col>     
+        <v-col cols="4" class="text-center border-sm">
+          {{ historyBalance }}
+        </v-col>
+      </v-row>
+    </v-col>
+  </v-row>
+
   <v-row class="justify-center">
     <v-col cols="auto" class="max-4">
-      <v-btn size="300" rounded elevation="10" @click.stop="spinAll">
-        <v-icon size="100" icon="mdi-motion" :color="grey-darken-2" class="mx-auto"/>
+      <v-btn size="100" rounded elevation="10" @click.stop="roll">
+        <v-icon size="50" icon="mdi-motion" color="grey-lighten-2" class="mx-auto"/>
       </v-btn>
     </v-col>
   </v-row>
@@ -138,23 +160,12 @@ const chances_two = [
 ]
 
 
-// const winLines = [
-//   [a1, a2, a3],
-
-//   [a1, b2, c3],
-
-//   [b1, b2, b3],
-
-//   [c1, b2, a3],
-
-//   [c1, c2, c3],
-// ]
 
 // ROLL  <=  48    <=  88    <=  108   <=  118   <=  124   <=  126   ==  127
 //           tar       grç       ara       mic       pxe       lob       ONÇA
-function roll() {
+function spin() {
   const random = Math.floor(Math.random() * 128);
-  // const random = 128
+  // const random = 127
   RNG.value = random
   oneCell.value = mappCellFigure(random)
   return mappCellFigure(random)
@@ -172,8 +183,115 @@ function mappCellFigure(num) {
 }
 function spinAll() {
   for(const cell in slots.value) {
-    slots.value[cell] = roll()
+    slots.value[cell] = spin()
   }
 }
+function saveHistory() {
+  const register = {
+    slots: slots.value,
+    date: new Date()
+  }
+}
+const bettingTokens = [40, 200, 1000, 5000]
+const initialPocket = 5000  
+// essa bet é uma soma do minimo de aposta por linha de aposta: 5 * 
+const lineBet = 8 
+const betLines = {
+  line1: ['a1', 'a2', 'a3'],
 
+  line2: ['a1', 'b2', 'c3'],
+
+  line3: ['b1', 'b2', 'b3'],
+
+  line4: ['c1', 'b2', 'a3'],
+
+  line5: ['c1', 'c2', 'c3'],
+}
+const minimalBet = lineBet * (Object.keys(betLines)).length // 40
+const pocket = ref(initialPocket) // 5.000 centavos -> R$ 50,00
+const currentBet = ref(minimalBet)
+const historyBalance = ref(0)
+
+const historyGame = ref([])
+
+const canRoll = computed(() => pocket.value >= minimalBet)
+
+function roll() {
+  if(!canRoll.value) {
+    notifyNotEnoughCredit()
+    return 
+  }
+  chargeBet()
+  spinAll()
+  const winners = processResult()
+  if(winners.length) {
+    // adicionar o premio amo 
+    const prize = processWinPrize(winners)
+    pocket.value += prize
+    notifyWin(prize)
+    
+  }
+  // processLoss()
+}
+function notifyNotEnoughCredit() {
+  notificationStore.setNotification({
+    modal: true,
+    text: 'Saldo insuficiente para jogar!',
+    icon: 'mdi-emoticon-cry-outline',
+    color: 'red-darken-1',
+  })
+}
+function notifyWin(prize) {
+  notificationStore.setNotification({
+    modal: true,
+    text: `Ganhou ${prize}`,
+    icon: 'mdi-cash-multiple',
+    color: 'green',
+    //color: 'green-darken-1',
+  })
+}
+function chargeBet() {
+  pocket.value = pocket.value - currentBet.value
+}
+
+function processResult() {
+  const round = {}
+  const winners = []
+  const figuresNames = figures.value.map((item) => item.name)
+  for(const [ind, lines] of Object.entries(betLines)) {
+    const winnerCandidate = [] // criar linhas de aposta que sao checadas
+    for(const slot of lines) {
+        const actualSlot = slots.value[slot]
+        winnerCandidate.push( actualSlot.name)
+    }
+
+    for(const figName of figuresNames) { // 
+      const hasWin = winnerCandidate.every((item) => item === figName)
+      if(hasWin) {
+        const winner = {}
+        winner[ind] = figName
+        winners.push(winner)
+        round[ind] = hasWin 
+        break
+      }
+      round[ind] = hasWin
+    }
+  }
+  return winners
+}
+function processWinPrize(winners) {
+  let multiplier = 0
+  let prizeBucket = 0 //TODO: implementar reduce?
+  for(const [line, figure] of Object.entries(winners)) {
+    multiplier++
+    const winnerName = Object.values(figure)[0]
+    const figureByName = figures.value.find((item) => item.name === winnerName)
+    prizeBucket += figureByName.prize * (currentBet.value / 5)
+    // cada aposta de *giro* é na verdade uma aposta obrigatoria para cada linha de aposta
+    // isso justifica 
+  }
+  const finalPrize = multiplier * prizeBucket 
+  console.log('finalPrize', finalPrize)
+  return finalPrize
+}
 </script>

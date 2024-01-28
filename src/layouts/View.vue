@@ -10,7 +10,7 @@
             :color="notification.color"
           >
             <div class="text-subtitle-1">
-              <v-icon :icon="notification.type" color="white" />
+              <v-icon :icon="notification.icon" color="white" class="mr-2" />
               {{ notification.text }}
             </div>
           </v-snackbar>
@@ -29,7 +29,7 @@ const storeNotification = computed(() => notificationStore.state)
 const notification = ref({
   modal: false,
   text: '',
-  type: '',
+  icon: '',
   color: '',
 })
 watch(

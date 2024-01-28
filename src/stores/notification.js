@@ -9,7 +9,7 @@ export const useNotificationStore = defineStore(
       return {
         modal: false,
         text: '',
-        type: '',
+        icon: '',
         color: '',
       }
     }
