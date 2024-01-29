@@ -1,22 +1,25 @@
 <template>
-  <v-container class="d-none">
-    <v-row class="justify-center d-h">
-      <v-col cols="3" class="max-4 ">
-        <div class="d-flex flex-column align-content-center text-center">
-          <p class="text-h5">{{ RNG }}</p>
-          <v-icon size="40" :icon="oneCell?.image || 'mdi-minus'" :color="oneCell?.color || 'grey-darken-2'" class="mx-auto"/>
-          <p class="text-subtitle-1">{{ oneCell?.name }}</p>
-        </div>
-      </v-col>
-    </v-row>
-    <v-row class="justify-center">
-      <v-col cols="auto" class="max-4">
-        <v-btn size="120" rounded elevation="10" @click.stop="spin">
-          Spin
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-container>
+  <v-row class="justify-center mb-10">
+    <v-col cols="9" class="px-0">
+      <v-row class="justify-end">
+        <v-col cols="auto" class="text-right">
+          <v-btn flat id="menu-activator">
+            {{ pointsToMoney(pocket) }}
+          </v-btn>
+          <v-menu activator="#menu-activator">
+          <v-list>
+            <v-list-item @click="addFunds">
+              <v-list-item-title>
+                <v-icon icon="mdi-plus" />
+                Add funds
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        </v-col>
+      </v-row>
+    </v-col>
+  </v-row>
   <v-row class="justify-center">
     <v-col cols="9">
       <v-row class="justify-center border-sm">
@@ -26,19 +29,52 @@
       </v-row>
     </v-col>
   </v-row>
-
-  <v-row class="justify-center mt-8">
+  <v-dialog v-model="addModal.modal" width="auto">
+    <v-card>
+      <v-card-title class="text-subtitle1">
+        Adicionar fundos
+      </v-card-title>
+      <v-card-text class="my-5">
+        <!-- <label for="addFunds">Current Bet</label> -->
+        <v-select 
+          id="addFunds"
+          v-model="addModal.funds"
+          flat
+          variant="solo"
+          :items="fundsOptions"
+          :item-title="pointsToMoney"
+          density="compact"
+          color="grey-darken-3"
+          dense
+          hide-details
+        />
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="grey-darken-1" @click="cancelFunds">Cancel</v-btn>
+        <v-btn color="primary" @click="confirmFunds">Confirm</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  <v-row class="justify-center mt-10">
     <v-col cols="9">
-      <v-row class="border-sm">
-        <v-col cols="4" class="text-center border-sm">
-          {{ pocket }}
+      <v-row class="justify-between">
+        <v-col cols="auto" class="border- px-0">
+          <!-- <label for="currentBet">Current Bet</label> -->
+          <v-select 
+            id="currentBet"
+            v-model="currentBet"
+            flat
+            variant="solo"
+            :items="betOptions"
+            :item-title="pointsToMoney"
+            density="compact"
+            color="grey-darken-3"
+            dense
+            hide-details
+          />
         </v-col>     
-        <v-col cols="4" class="text-center border-sm">
-
-          {{ currentBet }}
-        </v-col>     
-        <v-col cols="4" class="text-center border-sm">
-          {{ historyBalance }}
+        <v-col class="text-center border- d-flex justify-end align-center">
+          {{ pointsToMoney(historyBalance) }}
         </v-col>
       </v-row>
     </v-col>
@@ -56,8 +92,6 @@
 import { ref, computed, onMounted } from "vue";
 import { useNotificationStore } from "@/stores/notification";
 const notificationStore = useNotificationStore()
-const RNG = ref(0)
-const oneCell = ref(null)
 const figures = ref([
   {
     name: 'Tartaruga',
@@ -159,19 +193,15 @@ const chances_two = [
   1,
 ]
 
-
-
 // ROLL  <=  48    <=  88    <=  108   <=  118   <=  124   <=  126   ==  127
 //           tar       grç       ara       mic       pxe       lob       ONÇA
 function spin() {
   const random = Math.floor(Math.random() * 128);
   // const random = 127
-  RNG.value = random
-  oneCell.value = mappCellFigure(random)
-  return mappCellFigure(random)
+  return mappFigureByNumber(random)
 }
 
-function mappCellFigure(num) {
+function mappFigureByNumber(num) {
   let accumulator = 0
   for(let i = 0; i < figures.value.length; i++) {
     let figure = figures.value[i]
@@ -184,12 +214,6 @@ function mappCellFigure(num) {
 function spinAll() {
   for(const cell in slots.value) {
     slots.value[cell] = spin()
-  }
-}
-function saveHistory() {
-  const register = {
-    slots: slots.value,
-    date: new Date()
   }
 }
 const bettingTokens = [40, 200, 1000, 5000]
@@ -207,31 +231,68 @@ const betLines = {
 
   line5: ['c1', 'c2', 'c3'],
 }
+const betOptions = ref(proccessBetOptions())
+function proccessBetOptions() {
+  const increasedTokens = bettingTokens.map((item) => {
+    const multipliedTokens = []
+    for(let i = 1; i < 5; i++) {
+      multipliedTokens.push(item * i)
+    }
+    return multipliedTokens
+  })
+  const flattened = increasedTokens.flat()
+  return flattened
+}
 const minimalBet = lineBet * (Object.keys(betLines)).length // 40
 const pocket = ref(initialPocket) // 5.000 centavos -> R$ 50,00
 const currentBet = ref(minimalBet)
-const historyBalance = ref(0)
+const historyBalance = computed(() => {
+  const reduce = historyGame.value.reduce((acc, item) => acc + item.prize, 0)
+  console.log('reduce', reduce)
+  return reduce
+})
 
 const historyGame = ref([])
 
-const canRoll = computed(() => pocket.value >= minimalBet)
+//const canRoll = computed(() => pocket.value >= currentBet.value)
+const canRoll = computed(() => pocket.value >= currentBet.value)
 
 function roll() {
   if(!canRoll.value) {
     notifyNotEnoughCredit()
     return 
   }
+  const pocketBefore = pocket.value
   chargeBet()
+  const bet = currentBet.value
   spinAll()
+  const slotsResult = slots.value
   const winners = processResult()
+  let prize = 0
   if(winners.length) {
-    // adicionar o premio amo 
-    const prize = processWinPrize(winners)
+    // adicionar o premio ao pocket
+    prize = processWinPrize(winners)
+    givePrize(prize)
     pocket.value += prize
+    //historyBalance.value += prize aqui deve virar um computed 
     notifyWin(prize)
-    
   }
-  // processLoss()
+  const balance = prize - bet
+  const dateObj = new Date()
+  const date = dateObj.toLocaleTimeString('pt-br')
+  const history = {
+    pocketBefore,
+    bet,
+    slotsResult,
+    winners,
+    prize,
+    balance,
+    date,
+  }
+  console.log('history', history)
+  historyGame.value.push(history)
+  //processLoss()
+
 }
 function notifyNotEnoughCredit() {
   notificationStore.setNotification({
@@ -241,13 +302,15 @@ function notifyNotEnoughCredit() {
     color: 'red-darken-1',
   })
 }
+function givePrize(prize) {
+  pocket.value = pocket.value + prize
+}
 function notifyWin(prize) {
   notificationStore.setNotification({
     modal: true,
-    text: `Ganhou ${prize}`,
+    text: `Ganhou ${pointsToMoney(prize)}`,
     icon: 'mdi-cash-multiple',
     color: 'green',
-    //color: 'green-darken-1',
   })
 }
 function chargeBet() {
@@ -294,4 +357,41 @@ function processWinPrize(winners) {
   console.log('finalPrize', finalPrize)
   return finalPrize
 }
+function processLoss() {
+  //TODO: 
+  // - incrementar saldo da derrota e vitoria -> na verdade o saldo só incrementa *premios*
+  // - salvar dados de um history
+  // - definir aposta
+  // - feedback visual das etapas + delay das etapas para compreensao
+  // 
+}
+function pointsToMoney(val) {
+  const price = val / 100
+  return price.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+}
+function moneyToPoints(val) {
+  const numericValue = parseFloat(val.replace(/[^\d.,]/g, '').replace(',', '.'));
+  const points = numericValue * 100;
+  return Math.round(points);
+}
+const addModal = ref({
+  modal: false,
+  funds: 0,
+})
+function addFunds() {
+  addModal.value.modal = true
+}
+function cancelFunds() {
+  addModal.value.modal = false
+}
+function confirmFunds() {
+  console.log('moneyToPoints(addModal.value.funds)', moneyToPoints(addModal.value.funds))
+
+  pocket.value = pocket.value + moneyToPoints(addModal.value.funds)
+  addModal.value = {
+    modal: false,
+    funds: 0
+  }
+}
+const fundsOptions = ref(proccessBetOptions())
 </script>
