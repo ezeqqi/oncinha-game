@@ -9,11 +9,16 @@ const routes = [
       {
         path: 'game',
         name: 'game',
-        meta: { isFull: true },
         component: () => import('@/views/Game.vue'),
+      },
+      {
+        path: 'history',
+        name: 'history',
+        component: () => import('@/views/History.vue'),
       },
     ],
   },
+
 ]
 
 const router = createRouter({

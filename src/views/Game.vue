@@ -1,98 +1,102 @@
 <template>
-  <v-row class="justify-center mb-10">
-    <v-col cols="9" class="px-0">
-      <v-row class="justify-end">
-        <v-col cols="auto" class="text-right">
-          <v-btn flat id="menu-activator">
-            {{ pointsToMoney(pocket) }}
-          </v-btn>
-          <v-menu activator="#menu-activator">
-            <v-list>
-              <v-list-item @click="addFunds">
-                <v-list-item-title>
-                  <v-icon icon="mdi-plus" />
-                  Add funds
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-col>
-      </v-row>
-    </v-col>
-  </v-row>
-  <v-row class="justify-center">
-    <v-col cols="9">
-      <v-row class="justify-center border-sm">
-        <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i">
-          <v-icon
-            size="40"
-            :icon="slot?.image || 'mdi-minus'"
-            :color="slot?.color || 'grey-darken-2'"
-            class="mx-auto"
-          />
-        </v-col>
-      </v-row>
-    </v-col>
-  </v-row>
-  <v-dialog v-model="addModal.modal" width="auto">
-    <v-card>
-      <v-card-title class="text-subtitle1"> Adicionar fundos </v-card-title>
-      <v-card-text class="my-5">
-        <!-- <label for="addFunds">Current Bet</label> -->
-        <v-select
-          id="addFunds"
-          v-model="addModal.funds"
-          flat
-          variant="solo"
-          :items="fundsOptions"
-          :item-title="pointsToMoney"
-          density="compact"
-          color="grey-darken-3"
-          dense
-          hide-details
+  <div style="height: 100%;">
+    <v-row class="justify-end mb-10 mt-2">
+      <v-col class="text-right px-0">
+        <v-btn flat id="menu-activator">
+          {{ pointsToMoney(pocket) }}
+        </v-btn>
+        <v-menu activator="#menu-activator">
+          <v-list>
+            <v-list-item @click="addFunds">
+              <v-list-item-title>
+                <v-icon icon="mdi-plus" />
+                Add funds
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-col>
+    </v-row>
+    <v-row class="justify-center border-sm">
+      <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i">
+        <v-icon
+          size="40"
+          :icon="slot?.image || 'mdi-minus'"
+          :color="slot?.color || 'grey-darken-2'"
+          class="mx-auto"
         />
-      </v-card-text>
-      <v-card-actions>
-        <v-btn color="grey-darken-1" @click="cancelFunds">Cancel</v-btn>
-        <v-btn color="primary" @click="confirmFunds">Confirm</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-  <v-row class="justify-center mt-10">
-    <v-col cols="9">
-      <v-row class="justify-between">
-        <v-col cols="auto" class="border- px-0" title="Valor de aposta">
-          <!-- <label for="currentBet">Current Bet</label> -->
+      </v-col>
+    </v-row>
+    <v-dialog v-model="addModal.modal" width="auto">
+      <v-card>
+        <v-card-title class="text-subtitle1"> Adicionar fundos </v-card-title>
+        <v-card-text class="my-5">
+          <!-- <label for="addFunds">Current Bet</label> -->
           <v-select
-            id="currentBet"
-            v-model="currentBet"
+            id="addFunds"
+            v-model="addModal.funds"
             flat
             variant="solo"
-            :items="betOptions"
+            :items="fundsOptions"
+            :item-title="pointsToMoney"
             density="compact"
             color="grey-darken-3"
             dense
             hide-details
           />
-        </v-col>
-        <v-col class="text-center border- d-flex justify-end align-center">
-          {{ pointsToMoney(historyBalance) }}
-        </v-col>
-      </v-row>
-    </v-col>
-  </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="grey-darken-1" @click="cancelFunds">Cancel</v-btn>
+          <v-btn color="primary" @click="confirmFunds">Confirm</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-row class="justify-between mt-10">
+      <v-col cols="auto" class="border- px-0" title="Valor de aposta">
+        <!-- <label for="currentBet">Current Bet</label> -->
+        <v-select
+          id="currentBet"
+          v-model="currentBet"
+          flat
+          variant="solo"
+          :items="betOptions"
+          density="compact"
+          color="grey-darken-3"
+          dense
+          hide-details
+        />
+      </v-col>
+      <v-col class="text-center border- d-flex justify-end align-center">
+        {{ pointsToMoney(historyBalance) }}
+      </v-col>
+    </v-row>
+    <v-row class="justify-center">
+      <v-col cols="auto" class="max-4">
+        <v-btn size="120" rounded elevation="10" @click.stop="roll">
+          <v-icon size="60" icon="mdi-motion" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>
+    </v-row>
 
-  <v-row class="justify-center">
-    <v-col cols="auto" class="max-4">
-      <v-btn size="100" rounded elevation="10" @click.stop="roll">
-        <v-icon size="50" icon="mdi-motion" color="grey-lighten-2" class="mx-auto" />
-      </v-btn>
-    </v-col>
-  </v-row>
+    <v-row class="justify-between mt-4">
+      <v-col class="max-4 px-0">
+        <v-btn rounded elevation="4" @click.stop="saveHistory">
+          <v-icon icon="mdi-content-save" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>
+      <v-col class="max-4 px-0 text-right">
+        <v-btn rounded elevation="4" @click.stop="toHistory">
+          <v-icon icon="mdi-history" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>
+    </v-row>
+  </div>
 </template>
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useNotificationStore } from "@/stores/notification";
+import { useRouter } from "vue-router";
+const router = useRouter()
 const notificationStore = useNotificationStore();
 const figures = ref([
   {
@@ -269,7 +273,9 @@ function roll() {
   const hour = now.toLocaleTimeString("pt-br");
   const calendar = new Intl.DateTimeFormat('pt-br').format(now)
   const date = `${calendar} ${hour}`
+  const id = Math.floor(Math.random() * 128 * 128)
   const history = {
+    id,
     pocketBefore,
     bet,
     slotsResult,
@@ -278,7 +284,6 @@ function roll() {
     balance,
     date,
   };
-  console.log("history", history);
   historyGame.value.push(history);
   //processLoss()
 }
@@ -374,8 +379,6 @@ function cancelFunds() {
   addModal.value.modal = false;
 }
 function confirmFunds() {
-  console.log("moneyToPoints(addModal.value.funds)", moneyToPoints(addModal.value.funds));
-
   pocket.value = pocket.value + moneyToPoints(addModal.value.funds);
   addModal.value = {
     modal: false,
@@ -383,4 +386,14 @@ function confirmFunds() {
   };
 }
 const fundsOptions = ref(processBetOptions());
+function saveHistory() {
+  const stories = JSON.stringify(historyGame.value)
+  localStorage.setItem(`game-history`,stories)
+}
+// function loadHistory() {
+//   return localStorage.getItem(`game-history`)
+// }
+function toHistory() {
+  router.push({name: 'history'})
+}
 </script>
