@@ -18,11 +18,12 @@
       </v-col>
     </v-row>
     <v-row class="justify-center border-sm">
-      <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i">
+      <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i" >
         <v-icon
           size="40"
-          :icon="slot?.image || 'mdi-minus'"
-          :color="slot?.color || 'grey-darken-2'"
+          :class="i"
+          :icon="slot?.image"
+          :color="slot?.color"
           class="mx-auto"
         />
       </v-col>
@@ -76,9 +77,14 @@
           <v-icon size="60" icon="mdi-motion" color="grey-lighten-2" class="mx-auto" />
         </v-btn>
       </v-col>
+      <v-col cols="auto" class="max-4">
+        <v-btn size="40" rounded elevation="10" @click.stop="animateSlotMachine">
+          <v-icon size="20" icon="mdi-plus" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>
     </v-row>
 
-    <v-row class="justify-between mt-4">
+    <!-- <v-row class="justify-between mt-4">
       <v-col class="max-4 px-0">
         <v-btn rounded elevation="4" @click.stop="saveHistory">
           <v-icon icon="mdi-content-save" color="grey-lighten-2" class="mx-auto" />
@@ -89,6 +95,23 @@
           <v-icon icon="mdi-history" color="grey-lighten-2" class="mx-auto" />
         </v-btn>
       </v-col>
+    </v-row> -->
+    <v-row class="justify-between mt-4">
+      <v-col class="max-4 px-0">
+        <v-btn rounded elevation="4" @click.stop="pause">
+          <v-icon icon="mdi-pause" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>
+      <v-col class="max-4 px-0 text-right">
+        <v-btn rounded elevation="4" @click.stop="play">
+          <v-icon icon="mdi-arrow-right" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>      
+      <v-col class="max-4 px-0 text-right">
+        <v-btn rounded elevation="4" @click.stop="kill">
+          <v-icon icon="mdi-skull" color="grey-lighten-2" class="mx-auto" />
+        </v-btn>
+      </v-col>
     </v-row>
   </div>
 </template>
@@ -96,7 +119,10 @@
 import { ref, computed, onMounted } from "vue";
 import { useNotificationStore } from "@/stores/notification";
 import { useRouter } from "vue-router";
+import { useGsap } from "@/plugins/gsap"
 const router = useRouter()
+const gsap = useGsap()
+const plus = ref(null)
 const notificationStore = useNotificationStore();
 const figures = ref([
   {
@@ -167,7 +193,22 @@ const slots = ref({
   c2: null,
   c3: null,
 });
-
+const slotsRefs = {
+  a1: null,
+  a2: null,
+  a3: null,
+  b1: null,
+  b2: null,
+  b3: null,
+  c1: null,
+  c2: null,
+  c3: null,
+};
+function setRefs(position) {
+  return (el) => {
+    slotsRefs[position] = el;
+  };
+}
 //      # SLOTS
 //
 //      1     2     3
@@ -221,6 +262,11 @@ const betLines = {
 
   line5: ["c1", "c2", "c3"],
 };
+const columnsLines = {
+  one:   ['a1', 'b1', 'c1'],
+  two:   ['a2', 'b2', 'c2'],
+  three: ['a3', 'b3', 'c3'],
+}
 const betOptions = ref(processBetOptions());
 function processBetOptions() {
   const increasedTokens = bettingTokens.map((item) => {
@@ -395,5 +441,81 @@ function saveHistory() {
 // }
 function toHistory() {
   router.push({name: 'history'})
+}
+// onMounted(() => {
+//   spinAll()
+// })
+
+function getColumn(slot) {
+  const colOne =   ['a1', 'b1', 'c1']
+  const colTwo =   ['a2', 'b2', 'c2']
+  const colThree = ['a3', 'b3', 'c3']
+
+  if(colOne.includes(slot)) {
+    console.log('colOne')
+    return 'colOne'
+  }
+  if(colTwo.includes(slot)) {
+    console.log('colTwo')
+    return 'colTwo'
+  }
+  if(colThree.includes(slot)) {
+    console.log('colThree')
+    return 'colThree'
+  }
+  
+}
+let timeline = ''
+function animateSlide() {
+  timeline = gsap.to('.plus', {
+    y: '-200',
+    duration: 1,
+    ease: 'power3.out',
+    repeat: 4,
+    onComplete: () => {
+      console.log('Animação de slots completa');
+    },
+  })
+}
+const tl = gsap.timeline();
+function animateSlotMachine() {
+  const duration = 1;
+  const lines = ['.a2', '.b2', '.c2'];
+
+  // Criar um array para armazenar os elementos DOM correspondentes aos seletores
+  const lineElements = lines.map(selector => document.querySelector(selector));
+
+  // Criar uma timeline para controlar a animação
+  // const tl = gsap.timeline();
+
+  // Contador de loops
+  let loopCount = 0;
+  const maxLoops = 5; // Defina o número máximo de loops desejado
+  let repeat = -1
+  let count = 0;
+  const loops = 5; // Defina o número máximo de loops desejado
+  let rep = -1
+  // Adicione tweens para cada elemento na roleta de slots
+  tl.fromTo(lineElements, {
+      y: "-200", 
+      duration: duration, 
+      ease: "power2.in",
+    },
+    {
+      y: "+200", 
+      duration: duration, 
+      ease: "power2.out",
+    }
+  ).repeat()
+}
+
+function pause() {
+  tl.pause()
+}
+function play() {
+  tl.play()
+}
+function kill() {
+  tl.kill('.a2')
 }
 </script>
