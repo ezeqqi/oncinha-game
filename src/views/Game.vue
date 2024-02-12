@@ -19,12 +19,26 @@
     </v-row>
     <v-row class="justify-center border-sm">
       <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i">
-        <v-icon
-          size="40"
-          :icon="slot?.image || 'mdi-minus'"
-          :color="slot?.color || 'grey-darken-2'"
-          class="mx-auto"
-        />
+        <v-scroll-y-transition hide-on-leave>
+          <div v-show="!!slot">
+            <v-icon
+              size="40"
+              :icon="slot?.image || 'mdi-minus'"
+              :color="slot?.color || 'grey-darken-2'"
+              class="mx-auto"
+            />
+          </div>
+        </v-scroll-y-transition>
+        <v-scroll-y-reverse-transition hide-on-leave>
+          <div v-show="!slot">
+            <v-icon
+              size="40"
+              icon="mdi-minus"
+              color="grey-darken-2"
+              class="mx-auto"
+            />
+          </div>
+        </v-scroll-y-reverse-transition>
       </v-col>
     </v-row>
     <v-dialog v-model="addModal.modal" width="auto">
@@ -38,7 +52,6 @@
             flat
             variant="solo"
             :items="fundsOptions"
-            :item-title="pointsToMoney"
             density="compact"
             color="grey-darken-3"
             dense
@@ -72,7 +85,7 @@
     </v-row>
     <v-row class="justify-center">
       <v-col cols="auto" class="max-4">
-        <v-btn size="120" rounded elevation="10" @click.stop="roll">
+        <v-btn size="120" :variant="disabled ? 'plain' : 'elevated'" rounded elevation="10" @click.stop="roll" :disabled="disabled">
           <v-icon size="60" icon="mdi-motion" color="grey-lighten-2" class="mx-auto" />
         </v-btn>
       </v-col>
@@ -102,7 +115,8 @@ const figures = ref([
   {
     name: "Tartaruga",
     prize: 3,
-    odds: 48,
+    odds: 32,
+    odds2: 48,
     odds_alt: 64,
     image: "mdi-tortoise",
     color: "light-green-lighten-1",
@@ -110,7 +124,8 @@ const figures = ref([
   {
     name: "Garça",
     prize: 5,
-    odds: 40,
+    odds: 30,
+    odds2: 40,
     odds_alt: 32,
     image: "mdi-bat",
     color: "deep-purple-lighten-3",
@@ -118,7 +133,8 @@ const figures = ref([
   {
     name: "Arara",
     prize: 10,
-    odds: 20,
+    odds: 24,
+    odds2: 20,
     odds_alt: 16,
     image: "mdi-bird",
     color: "red",
@@ -126,7 +142,8 @@ const figures = ref([
   {
     name: "Mico-leão",
     prize: 25,
-    odds: 10,
+    odds: 16,
+    odds2: 10,
     odds_alt: 8,
     image: "mdi-weather-sunny",
     color: "amber-lighten-1",
@@ -134,7 +151,8 @@ const figures = ref([
   {
     name: "Peixe",
     prize: 50,
-    odds: 6,
+    odds: 12,
+    odds2: 6,
     odds_alt: 4,
     image: "mdi-fish",
     color: "cyan-lighten-3",
@@ -142,7 +160,8 @@ const figures = ref([
   {
     name: "Lobo guará",
     prize: 100,
-    odds: 2,
+    odds: 8,
+    odds2: 2,
     odds_alt: 2,
     image: "mdi-dog-side",
     color: "brown-lighten-1",
@@ -150,7 +169,8 @@ const figures = ref([
   {
     name: "Onça pintada",
     prize: 250,
-    odds: 1,
+    odds: 5,
+    odds2: 1,
     odds_alt: 1,
     image: "mdi-cat",
     color: "orange-darken-3",
@@ -167,7 +187,7 @@ const slots = ref({
   c2: null,
   c3: null,
 });
-
+const disabled = ref(false)
 //      # SLOTS
 //
 //      1     2     3
@@ -188,22 +208,37 @@ const chances_two = [48, 40, 20, 10, 6, 2, 1];
 function spin() {
   const random = Math.floor(Math.random() * 128);
   // const random = 127
-  return mappFigureByNumber(random);
+  // odds | odds2 | odds_alt
+  const slot = Object.assign({random}, mappFigureByNumber(random, 'odds'))
+  return slot
 }
 
-function mappFigureByNumber(num) {
+function mappFigureByNumber(num, oddType) {
   let accumulator = 0;
   for (let i = 0; i < figures.value.length; i++) {
     let figure = figures.value[i];
-    accumulator += figure.odds;
+    accumulator += figure[oddType];
     if (num <= accumulator) {
       return figure;
     }
   }
 }
 function spinAll() {
+  let i = 100
   for (const cell in slots.value) {
-    slots.value[cell] = spin();
+    setTimeout(() => {
+      slots.value[cell] = spin()
+    }, i)
+    i += 100
+  }
+}
+function clearAll() {
+  let i = 100
+  for (const cell in slots.value) {
+    setTimeout(() => {
+      slots.value[cell] = null
+    }, i)
+    i += 100
   }
 }
 const bettingTokens = [40, 200, 1000, 5000];
@@ -222,7 +257,7 @@ const betLines = {
   line5: ["c1", "c2", "c3"],
 };
 const betOptions = ref(processBetOptions());
-function processBetOptions() {
+function processBetOptions(fund) {
   const increasedTokens = bettingTokens.map((item) => {
     const multipliedTokens = [];
     for (let i = 1; i < 5; i++) {
@@ -231,12 +266,16 @@ function processBetOptions() {
     return multipliedTokens;
   });
   const flattened = increasedTokens.flat();
-  return flattened.map((bet) => {
+  const moneyOptions = flattened.map((bet) => {
     return {
       value: bet,
       title: pointsToMoney(bet)
     }
   });
+  if(fund) {
+    moneyOptions.unshift({value: 0 , title: pointsToMoney(0)})
+  }
+  return moneyOptions
 }
 const minimalBet = lineBet * Object.keys(betLines).length; // 40
 const pocket = ref(initialPocket); // 5.000 centavos -> R$ 50,00
@@ -248,26 +287,76 @@ const historyGame = ref([]);
 //const canRoll = computed(() => pocket.value >= currentBet.value)
 const canRoll = computed(() => pocket.value >= currentBet.value);
 
+function animateSlots() {
+  clearAll() // 900
+  setTimeout(() => {
+    spinAll() // 900
+  }, 1100)
+}
+
 function roll() {
   if (!canRoll.value) {
     notifyNotEnoughCredit();
     return;
   }
+  disabled.value = true
   const pocketBefore = pocket.value;
   chargeBet();
   const bet = currentBet.value;
-  spinAll();
+  //animate first
+  animateSlots() // 1100
+  setTimeout(() => {
+    processAfterMatch(pocketBefore, bet)
+  }, 2200)
+
+}
+function processAfterMatch(pocketBefore, bet) {
   const slotsResult = slots.value;
   const winners = processResult();
   let prize = 0;
   if (winners.length) {
+    // animação de lines
     // adicionar o premio ao pocket
+    for(const winner of Object.values(winners)) {
+      const winnerKey = Object.keys(winner)[0]
+      const figureName = Object.values(winner)[0]
+      const originalColor = figures.value.find((item) => item.name === figureName).color
+      const highligths = betLines[winnerKey]
+
+      for(const slot of highligths) { 
+        slots.value[slot].color = 'grey-darken-2'
+        setTimeout(() => {slots.value[slot].color = originalColor}, 150)
+        setTimeout(() => {slots.value[slot].color = 'grey-darken-2'}, 300)
+        setTimeout(() => {slots.value[slot].color = originalColor}, 450)
+        setTimeout(() => {slots.value[slot].color = 'grey-darken-2'}, 600)
+        setTimeout(() => {slots.value[slot].color = originalColor}, 750)
+      }
+    }
+
     prize = processWinPrize(winners);
     givePrize(prize);
     pocket.value += prize;
     //historyBalance.value += prize aqui deve virar um computed
     notifyWin(prize);
+    
+    
   }
+  if(winners.length) {
+    setTimeout(() => {disabled.value = false}, 950)
+  } else {
+    setTimeout(() => {disabled.value = false}, 150)
+  }
+  const matchData = {
+    pocketBefore,
+    bet,
+    slotsResult,
+    winners,
+    prize,
+  }
+  matchResume(matchData)
+}
+function matchResume(info) {
+  const { pocketBefore, bet, prize, slotsResult, winners } = info
   const balance = prize - bet;
   const now = new Date();
   const hour = now.toLocaleTimeString("pt-br");
@@ -285,8 +374,8 @@ function roll() {
     date,
   };
   historyGame.value.push(history);
-  //processLoss()
 }
+
 function notifyNotEnoughCredit() {
   notificationStore.setNotification({
     modal: true,
@@ -311,7 +400,7 @@ function chargeBet() {
 }
 
 function processResult() {
-  const round = {};
+  // const round = {};
   const winners = [];
   const figuresNames = figures.value.map((item) => item.name);
   for (const [ind, lines] of Object.entries(betLines)) {
@@ -320,18 +409,16 @@ function processResult() {
       const slot = slots.value[position];
       winnerCandidate.push(slot.name);
     }
-
     for (const figName of figuresNames) {
-      //
       const hasWin = winnerCandidate.every((item) => item === figName);
       if (hasWin) {
         const winner = {};
         winner[ind] = figName;
         winners.push(winner);
-        round[ind] = hasWin;
+        // round[ind] = hasWin;
         break;
       }
-      round[ind] = hasWin;
+      // round[ind] = hasWin;
     }
   }
   return winners;
@@ -348,7 +435,6 @@ function processWinPrize(winners) {
     // isso justifica
   }
   const finalPrize = multiplier * prizeBucket;
-  console.log("finalPrize", finalPrize);
   return finalPrize;
 }
 function processLoss() {
@@ -379,13 +465,13 @@ function cancelFunds() {
   addModal.value.modal = false;
 }
 function confirmFunds() {
-  pocket.value = pocket.value + moneyToPoints(addModal.value.funds);
+  pocket.value = pocket.value + addModal.value.funds;
   addModal.value = {
     modal: false,
     funds: 0,
   };
 }
-const fundsOptions = ref(processBetOptions());
+const fundsOptions = ref(processBetOptions('funds'));
 function saveHistory() {
   const stories = JSON.stringify(historyGame.value)
   localStorage.setItem(`game-history`,stories)
@@ -396,4 +482,7 @@ function saveHistory() {
 function toHistory() {
   router.push({name: 'history'})
 }
+onMounted(() => {
+  spinAll()
+})
 </script>
