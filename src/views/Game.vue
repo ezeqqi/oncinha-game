@@ -17,7 +17,7 @@
         </v-menu>
       </v-col>
     </v-row>
-    <v-row class="justify-center border-sm">
+    <v-row class="machine justify-center border-sm">
       <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i" >
         <v-icon
           size="40"
@@ -39,7 +39,6 @@
             flat
             variant="solo"
             :items="fundsOptions"
-            :item-title="pointsToMoney"
             density="compact"
             color="grey-darken-3"
             dense
@@ -277,12 +276,13 @@ function processBetOptions() {
     return multipliedTokens;
   });
   const flattened = increasedTokens.flat();
-  return flattened.map((bet) => {
+  const result = flattened.map((bet) => {
     return {
       value: bet,
       title: pointsToMoney(bet)
     }
   });
+  return result
 }
 const minimalBet = lineBet * Object.keys(betLines).length; // 40
 const pocket = ref(initialPocket); // 5.000 centavos -> R$ 50,00
@@ -425,7 +425,8 @@ function cancelFunds() {
   addModal.value.modal = false;
 }
 function confirmFunds() {
-  pocket.value = pocket.value + moneyToPoints(addModal.value.funds);
+  console.log('addModal.value.funds', addModal.value.funds)
+  pocket.value = pocket.value + addModal.value.funds
   addModal.value = {
     modal: false,
     funds: 0,
@@ -446,25 +447,6 @@ function toHistory() {
 //   spinAll()
 // })
 
-function getColumn(slot) {
-  const colOne =   ['a1', 'b1', 'c1']
-  const colTwo =   ['a2', 'b2', 'c2']
-  const colThree = ['a3', 'b3', 'c3']
-
-  if(colOne.includes(slot)) {
-    console.log('colOne')
-    return 'colOne'
-  }
-  if(colTwo.includes(slot)) {
-    console.log('colTwo')
-    return 'colTwo'
-  }
-  if(colThree.includes(slot)) {
-    console.log('colThree')
-    return 'colThree'
-  }
-  
-}
 let timeline = ''
 function animateSlide() {
   timeline = gsap.to('.plus', {
@@ -496,17 +478,22 @@ function animateSlotMachine() {
   const loops = 5; // Defina o número máximo de loops desejado
   let rep = -1
   // Adicione tweens para cada elemento na roleta de slots
-  tl.fromTo(lineElements, {
+  tl.from(lineElements, {
       y: "-200", 
       duration: duration, 
       ease: "power2.in",
-    },
-    {
-      y: "+200", 
-      duration: duration, 
-      ease: "power2.out",
-    }
-  ).repeat()
+      opacity: 0.0
+    })
+    // .to(
+    //   lineElements, 
+    //   {
+    //     y: "+200", 
+    //     duration: duration, 
+    //     ease: "power2.out",
+    //     opacity: 0.0
+    //   }
+    // )
+  
 }
 
 function pause() {
