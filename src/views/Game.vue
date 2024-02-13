@@ -41,6 +41,12 @@
         </v-scroll-y-reverse-transition>
       </v-col>
     </v-row>
+    <!-- <v-row class="border-sm my-4">
+      <v-col cols="auto" v-for="(slot, i) of highlights" :key="i">
+        <p> {{ i }} {{ slot }}</p>
+        {{ JSON.stringify(highlights[slot]) }}
+      </v-col>
+    </v-row> -->
     <v-dialog v-model="addModal.modal" width="auto">
       <v-card>
         <v-card-title class="text-subtitle1"> Adicionar fundos </v-card-title>
@@ -117,6 +123,7 @@ const figures = ref([
     prize: 3,
     odds: 32,
     odds2: 48,
+    odds3: 40,
     odds_alt: 64,
     image: "mdi-tortoise",
     color: "light-green-lighten-1",
@@ -126,6 +133,7 @@ const figures = ref([
     prize: 5,
     odds: 30,
     odds2: 40,
+    odds3: 30,
     odds_alt: 32,
     image: "mdi-bat",
     color: "deep-purple-lighten-3",
@@ -135,6 +143,7 @@ const figures = ref([
     prize: 10,
     odds: 24,
     odds2: 20,
+    odds3: 4,
     odds_alt: 16,
     image: "mdi-bird",
     color: "red",
@@ -144,6 +153,7 @@ const figures = ref([
     prize: 25,
     odds: 16,
     odds2: 10,
+    odds3: 4,
     odds_alt: 8,
     image: "mdi-weather-sunny",
     color: "amber-lighten-1",
@@ -153,6 +163,7 @@ const figures = ref([
     prize: 50,
     odds: 12,
     odds2: 6,
+    odds3: 4,
     odds_alt: 4,
     image: "mdi-fish",
     color: "cyan-lighten-3",
@@ -162,6 +173,7 @@ const figures = ref([
     prize: 100,
     odds: 8,
     odds2: 2,
+    odds3: 5,
     odds_alt: 2,
     image: "mdi-dog-side",
     color: "brown-lighten-1",
@@ -171,6 +183,7 @@ const figures = ref([
     prize: 250,
     odds: 5,
     odds2: 1,
+    odds3: 40,
     odds_alt: 1,
     image: "mdi-cat",
     color: "orange-darken-3",
@@ -209,7 +222,7 @@ function spin() {
   const random = Math.floor(Math.random() * 128);
   // const random = 127
   // odds | odds2 | odds_alt
-  const slot = Object.assign({random}, mappFigureByNumber(random, 'odds'))
+  const slot = Object.assign({random}, mappFigureByNumber(random, 'odds3'))
   return slot
 }
 
@@ -284,11 +297,11 @@ const historyBalance = computed(() => historyGame.value.reduce((acc, item) => ac
 
 const historyGame = ref([]);
 
-//const canRoll = computed(() => pocket.value >= currentBet.value)
 const canRoll = computed(() => pocket.value >= currentBet.value);
 
 function animateSlots() {
   clearAll() // 900
+  notificationStore.resetState()
   setTimeout(() => {
     spinAll() // 900
   }, 1100)
@@ -310,39 +323,48 @@ function roll() {
   }, 2200)
 
 }
+const highlights = ref({
+  a1: [],
+  a2: [],
+  a3: [],
+  b1: [],
+  b2: [],
+  b3: [],
+  c1: [],
+  c2: [],
+  c3: [],
+})
 function processAfterMatch(pocketBefore, bet) {
   const slotsResult = slots.value;
   const winners = processResult();
   let prize = 0;
   if (winners.length) {
-    // animação de lines
-    // adicionar o premio ao pocket
+
     for(const winner of Object.values(winners)) {
       const winnerKey = Object.keys(winner)[0]
       const figureName = Object.values(winner)[0]
       const originalColor = figures.value.find((item) => item.name === figureName).color
       const highligths = betLines[winnerKey]
 
-      for(const slot of highligths) { 
+      for(const slot of highligths) {
+
+        const highlightColor = slots.value[slot].name ===  'Onça pintada' ? 'orange-darken-3' : originalColor
         slots.value[slot].color = 'grey-darken-2'
-        setTimeout(() => {slots.value[slot].color = originalColor}, 150)
-        setTimeout(() => {slots.value[slot].color = 'grey-darken-2'}, 300)
-        setTimeout(() => {slots.value[slot].color = originalColor}, 450)
-        setTimeout(() => {slots.value[slot].color = 'grey-darken-2'}, 600)
-        setTimeout(() => {slots.value[slot].color = originalColor}, 750)
+        setTimeout(() => { slots.value[slot].color = highlightColor }, 150)
+        setTimeout(() => { slots.value[slot].color = 'grey-darken-2' }, 300)
+        setTimeout(() => { slots.value[slot].color = highlightColor }, 450)
+        setTimeout(() => { slots.value[slot].color = 'grey-darken-2' }, 600)
+        setTimeout(() => { slots.value[slot].color = highlightColor }, 750)
+        setTimeout(() => { slots.value[slot].color = 'grey-darken-2' }, 900)
+        setTimeout(() => { slots.value[slot].color = highlightColor }, 1100)
       }
     }
-
     prize = processWinPrize(winners);
     givePrize(prize);
-    pocket.value += prize;
-    //historyBalance.value += prize aqui deve virar um computed
     notifyWin(prize);
-    
-    
   }
-  if(winners.length) {
-    setTimeout(() => {disabled.value = false}, 950)
+  if(winners.length) { // 1100 
+    setTimeout(() => {disabled.value = false}, 1250)
   } else {
     setTimeout(() => {disabled.value = false}, 150)
   }
@@ -400,7 +422,6 @@ function chargeBet() {
 }
 
 function processResult() {
-  // const round = {};
   const winners = [];
   const figuresNames = figures.value.map((item) => item.name);
   for (const [ind, lines] of Object.entries(betLines)) {
@@ -410,15 +431,16 @@ function processResult() {
       winnerCandidate.push(slot.name);
     }
     for (const figName of figuresNames) {
-      const hasWin = winnerCandidate.every((item) => item === figName);
+      const wildFigure = 'Onça pintada'
+      const hasWin = winnerCandidate.every((item) => item === figName || item === wildFigure);
       if (hasWin) {
         const winner = {};
-        winner[ind] = figName;
+        const wildWin = winnerCandidate.every((item) => item === wildFigure)
+        const winnerFigure = wildWin ? wildFigure : figName
+        winner[ind] = winnerFigure;
         winners.push(winner);
-        // round[ind] = hasWin;
         break;
       }
-      // round[ind] = hasWin;
     }
   }
   return winners;
@@ -430,11 +452,16 @@ function processWinPrize(winners) {
     multiplier++;
     const winnerName = Object.values(figure)[0];
     const figureByName = figures.value.find((item) => item.name === winnerName);
-    prizeBucket += figureByName.prize * (currentBet.value / 5);
+    // console.log('figureByName', figureByName.name)
+    // console.log('winnerName', winnerName)
+    const linePrize =  figureByName.prize * (currentBet.value / 5);
+    // console.log('line prize', linePrize)
+    prizeBucket += linePrize
     // cada aposta de *giro* é na verdade uma aposta obrigatoria para cada linha de aposta
     // isso justifica
   }
   const finalPrize = multiplier * prizeBucket;
+  // console.log('final prize', finalPrize)
   return finalPrize;
 }
 function processLoss() {
