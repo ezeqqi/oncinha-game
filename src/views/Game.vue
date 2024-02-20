@@ -2,7 +2,8 @@
   <div style="height: 100%;">
     <v-row class="justify-end mb-10 mt-2">
       <v-col class="text-right px-0">
-        <v-btn flat id="menu-activator">
+        <v-btn flat id="menu-activator" title="Carteira">
+          <v-icon icon="mdi-piggy-bank" class="mr-2"/>
           {{ pointsToMoney(pocket) }}
         </v-btn>
         <v-menu activator="#menu-activator">
@@ -18,35 +19,31 @@
       </v-col>
     </v-row>
     <v-row class="justify-center border-sm">
-      <v-col v-for="(slot, i) of slots" cols="4" class="text-center border-sm" :key="i">
-        <v-scroll-y-transition hide-on-leave>
-          <div v-show="!!slot">
-            <v-icon
-              size="40"
-              :icon="slot?.image || 'mdi-minus'"
-              :color="slot?.color || 'grey-darken-2'"
-              class="mx-auto"
-            />
-          </div>
-        </v-scroll-y-transition>
-        <v-scroll-y-reverse-transition hide-on-leave>
-          <div v-show="!slot">
-            <v-icon
-              size="40"
-              icon="mdi-minus"
-              color="grey-darken-2"
-              class="mx-auto"
-            />
-          </div>
-        </v-scroll-y-reverse-transition>
+      <v-col v-for="(slot, i) of slots" cols="4" class="slot text-center border-sm " :key="i">
+        <div :class="slot?.line ?? ''">
+          <v-scroll-y-transition hide-on-leave>
+            <div class="" v-show="!!slot" >
+              <v-icon
+                size="40"
+                :icon="slot?.image || 'mdi-minus'"
+                :color="slot?.color || 'grey-darken-2'"
+                class="mx-auto"
+              />
+            </div>
+          </v-scroll-y-transition>
+          <v-scroll-y-reverse-transition hide-on-leave>
+            <div v-show="!slot">
+              <v-icon
+                size="40"
+                icon="mdi-minus"
+                color="grey-darken-2"
+                class="mx-auto"
+              />
+            </div>
+          </v-scroll-y-reverse-transition>
+        </div>
       </v-col>
     </v-row>
-    <!-- <v-row class="border-sm my-4">
-      <v-col cols="auto" v-for="(slot, i) of highlights" :key="i">
-        <p> {{ i }} {{ slot }}</p>
-        {{ JSON.stringify(highlights[slot]) }}
-      </v-col>
-    </v-row> -->
     <v-dialog v-model="addModal.modal" width="auto">
       <v-card>
         <v-card-title class="text-subtitle1"> Adicionar fundos </v-card-title>
@@ -83,9 +80,14 @@
           color="grey-darken-3"
           dense
           hide-details
-        />
+        >
+          <template v-slot:prepend-inner="{props}">
+            <v-icon icon="mdi-hand-coin" class="mr-1" />
+          </template>
+        </v-select>
       </v-col>
-      <v-col class="text-center border- d-flex justify-end align-center">
+      <v-col class="text-center border- d-flex justify-end align-center" title="Prêmios">
+        <v-icon icon="mdi-cash-multiple" class="mr-1" />
         {{ pointsToMoney(historyBalance) }}
       </v-col>
     </v-row>
@@ -222,7 +224,7 @@ function spin() {
   const random = Math.floor(Math.random() * 128);
   // const random = 127
   // odds | odds2 | odds_alt
-  const slot = Object.assign({random}, mappFigureByNumber(random, 'odds3'))
+  const slot = Object.assign({random}, mappFigureByNumber(random, 'odds'))
   return slot
 }
 
@@ -338,34 +340,53 @@ function processAfterMatch(pocketBefore, bet) {
   const slotsResult = slots.value;
   const winners = processResult();
   let prize = 0;
+  const loops = 4
+  const interval = 150
   if (winners.length) {
+    let lineDelay = 0
 
     for(const winner of Object.values(winners)) {
       const winnerKey = Object.keys(winner)[0]
       const figureName = Object.values(winner)[0]
       const originalColor = figures.value.find((item) => item.name === figureName).color
       const highligths = betLines[winnerKey]
+      // acho que vou ter que implementar uma logica de acumulação de timeout para cada linha vencedora de higlight mas o desafio é fazer isso ao passo que meu loop está passando pelos slots e nao pelas linhas
 
+      let roundDuration = (loops * (interval * 2) + interval) * lineDelay
       for(const slot of highligths) {
 
         const highlightColor = slots.value[slot].name ===  'Onça pintada' ? 'orange-darken-3' : originalColor
-        slots.value[slot].color = 'grey-darken-2'
-        setTimeout(() => { slots.value[slot].color = highlightColor }, 150)
-        setTimeout(() => { slots.value[slot].color = 'grey-darken-2' }, 300)
-        setTimeout(() => { slots.value[slot].color = highlightColor }, 450)
-        setTimeout(() => { slots.value[slot].color = 'grey-darken-2' }, 600)
-        setTimeout(() => { slots.value[slot].color = highlightColor }, 750)
-        setTimeout(() => { slots.value[slot].color = 'grey-darken-2' }, 900)
-        setTimeout(() => { slots.value[slot].color = highlightColor }, 1100)
+        const hideColor = 'grey-darken-2'
+
+        const configColor = {
+          one: highlightColor,
+          two: hideColor,
+          reference: slots.value[slot],
+          key: 'color',
+          interval,
+          loops,
+        }
+        if(!!lineDelay) {
+          setTimeout(() => {
+            blink(configColor)
+          }, roundDuration)
+        }
+        else {
+          blink(configColor)
+        }
+
       }
+
+      lineDelay++
     }
+    const allRoundsDuration = (loops * (interval * 2) + interval) * lineDelay
+
+    setTimeout(() => {disabled.value = false}, allRoundsDuration)
     prize = processWinPrize(winners);
     givePrize(prize);
     notifyWin(prize);
   }
-  if(winners.length) { // 1100 
-    setTimeout(() => {disabled.value = false}, 1250)
-  } else {
+  if(!winners.length) { // 1100
     setTimeout(() => {disabled.value = false}, 150)
   }
   const matchData = {
@@ -376,6 +397,25 @@ function processAfterMatch(pocketBefore, bet) {
     prize,
   }
   matchResume(matchData)
+}
+function blink(config) {
+  const { loops, interval, reference, key, one, two } = config
+  reference[key] = one
+  let acc = 1
+  for(let i = 0; loops > i; i++) {
+    setTimeout(() => {
+        reference[key] = two
+      },
+      interval * acc
+    )
+    acc++
+    setTimeout(() => {
+        reference[key] = one
+      },
+      interval * acc
+    )
+    acc++
+  }
 }
 function matchResume(info) {
   const { pocketBefore, bet, prize, slotsResult, winners } = info
@@ -509,7 +549,16 @@ function saveHistory() {
 function toHistory() {
   router.push({name: 'history'})
 }
+function getLine(i) {
+  return 'line1'
+}
 onMounted(() => {
   spinAll()
 })
 </script>
+<style>
+.slot {
+  width: 132px;
+  height: 66px;
+}
+</style>
