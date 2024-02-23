@@ -1,7 +1,12 @@
 <template>
   <div style="height: 100%;">
-    <v-row class="justify-end mb-10 mt-2">
-      <v-col class="text-right px-0">
+    <v-row class="justify-around mb-10 mt-2">
+      <v-col class="px-0">
+        <v-btn flat title="Ajuda" class="clickable" :to="{name: 'help'}">
+          <v-icon icon="mdi-help-circle-outline" size="24" class="" />
+        </v-btn>
+      </v-col>
+      <v-col cols="" class="text-right px-0">
         <v-btn flat id="menu-activator" title="Carteira">
           <v-icon icon="mdi-piggy-bank" class="mr-2"/>
           {{ pointsToMoney(pocket) }}

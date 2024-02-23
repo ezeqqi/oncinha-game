@@ -12,7 +12,7 @@
       </div>
     </v-snackbar>
     <v-row class="justify-center">
-      <v-col cols="9" class="max-4">
+      <v-col cols="9" class="max-">
         <router-view />
       </v-col>
     </v-row>
