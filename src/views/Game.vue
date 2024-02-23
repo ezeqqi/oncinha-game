@@ -133,6 +133,8 @@ const figures = ref([
     odds3: 40,
     odds_alt: 64,
     image: "mdi-tortoise",
+    emoji: '🐢',
+    emoji2: '🐢',
     color: "light-green-lighten-1",
   },
   {
@@ -143,6 +145,8 @@ const figures = ref([
     odds3: 30,
     odds_alt: 32,
     image: "mdi-bat",
+    emoji: '🦢',
+    emoji2: '🦢',
     color: "deep-purple-lighten-3",
   },
   {
@@ -153,6 +157,8 @@ const figures = ref([
     odds3: 4,
     odds_alt: 16,
     image: "mdi-bird",
+    emoji: '🦜',
+    emoji2: '🦜',
     color: "red",
   },
   {
@@ -163,6 +169,8 @@ const figures = ref([
     odds3: 4,
     odds_alt: 8,
     image: "mdi-weather-sunny",
+    emoji: '🐒',
+    emoji2: '🐵',
     color: "amber-lighten-1",
   },
   {
@@ -173,6 +181,8 @@ const figures = ref([
     odds3: 4,
     odds_alt: 4,
     image: "mdi-fish",
+    emoji: '🐟',
+    emoji2: '🐟',
     color: "cyan-lighten-3",
   },
   {
@@ -183,6 +193,8 @@ const figures = ref([
     odds3: 5,
     odds_alt: 2,
     image: "mdi-dog-side",
+    emoji: '🐕',
+    emoji2: '🐺',
     color: "brown-lighten-1",
   },
   {
@@ -193,6 +205,8 @@ const figures = ref([
     odds3: 40,
     odds_alt: 1,
     image: "mdi-cat",
+    emoji: '🐆',
+    emoji2: '🐯',
     color: "orange-darken-3",
   },
 ]);
@@ -368,6 +382,14 @@ function processAfterMatch(pocketBefore, bet) {
           two: hideColor,
           reference: slots.value[slot],
           key: 'color',
+          interval,
+          loops,
+        }
+        const configEmoji = {
+          one: 'text-h3',
+          two: 'text-h6',
+          reference: slots.value[slot],
+          key: 'line',
           interval,
           loops,
         }
