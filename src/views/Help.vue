@@ -20,7 +20,7 @@
   </ul>
   <div class="text-center">
     <v-btn size="80" rounded elevation="10" :to="{name: 'game'}" >
-      <v-icon size="40" icon="mdi-sony-playstation" color="grey-lighten-2" class="mx-auto" />
+      <v-icon size="40" icon="mdi-play" color="grey-lighten-2" class="mx-auto" />
     </v-btn>
   </div>
   <p class="text-h6 text-center my-4"> Multiplicadores de prêmio</p>
