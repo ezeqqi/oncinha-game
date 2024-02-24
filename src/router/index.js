@@ -26,8 +26,9 @@ const routes = [
 
 ]
 
+const url = process.env.BASE_URL || 'https://master--oncinha-game.netlify.app'
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(url),
   routes,
 })
 
