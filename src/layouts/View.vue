@@ -1,22 +1,24 @@
 <template>
-  <v-main class="bg-grey-darken">
-    <v-snackbar
-      variant="flat"
-      v-model="notification.modal"
-      :timeout="5000"
-      :color="notification.color"
-    >
-      <div class="text-subtitle-1">
-        <v-icon :icon="notification.icon" color="white" class="mr-2" />
-        {{ notification.text }}
-      </div>
-    </v-snackbar>
-    <v-row class="justify-center">
-      <v-col cols="9" class="max-">
-        <router-view />
-      </v-col>
-    </v-row>
-  </v-main>
+  <v-app theme="dark">
+    <v-main class="bg-grey-darken">
+      <v-snackbar
+        variant="flat"
+        v-model="notification.modal"
+        :timeout="5000"
+        :color="notification.color"
+      >
+        <div class="text-subtitle-1">
+          <v-icon :icon="notification.icon" color="white" class="mr-2" />
+          {{ notification.text }}
+        </div>
+      </v-snackbar>
+      <v-row class="justify-center ma-0">
+        <v-col cols="9" class="max-">
+          <router-view />
+        </v-col>
+      </v-row>
+    </v-main>
+  </v-app>
 </template>
 <script setup>
 import { ref, computed, watch } from 'vue';

@@ -26,7 +26,7 @@ const routes = [
 
 ]
 
-const url = 'https://master--oncinha-game.netlify.app'
+const url = ''
 const router = createRouter({
   history: createWebHistory(url),
   routes,
